@@ -40,6 +40,7 @@ export function createState() {
     width: 0,
     height: 0,
     dpr: Math.max(1, Math.min(2, window.devicePixelRatio || 1)),
+    isCompact: false,
     time: 0,
     lastFrame: performance.now(),
     paused: false,

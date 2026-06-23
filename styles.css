@@ -22,6 +22,8 @@ body {
   width: 100%;
   height: 100%;
   overflow: hidden;
+  -webkit-text-size-adjust: 100%;
+  overscroll-behavior: none;
   background:
     linear-gradient(135deg, rgba(56, 84, 140, 0.08), transparent 36%),
     linear-gradient(20deg, rgba(210, 132, 70, 0.06), transparent 42%),
@@ -75,6 +77,7 @@ button {
   grid-template-columns: minmax(290px, 360px) 1fr;
   width: 100vw;
   height: 100vh;
+  min-height: 100svh;
 }
 
 .panel {
@@ -87,6 +90,7 @@ button {
   border-right: 1px solid var(--line);
   box-shadow: var(--shadow);
   overflow: hidden;
+  min-height: 0;
 }
 
 .panel::before {
@@ -365,6 +369,7 @@ button {
 .viewport {
   position: relative;
   overflow: hidden;
+  min-height: 0;
 }
 
 canvas {
@@ -372,6 +377,7 @@ canvas {
   height: 100%;
   display: block;
   cursor: crosshair;
+  touch-action: none;
 }
 
 .reticle {
@@ -408,24 +414,35 @@ canvas {
   height: 1px;
 }
 
-@media (max-width: 920px) {
+@media (max-width: 1100px) {
   .shell {
     grid-template-columns: 1fr;
-    grid-template-rows: auto 1fr;
+    grid-template-rows: minmax(0, auto) minmax(0, 1fr);
   }
 
   .panel {
-    max-height: 42vh;
+    max-height: 42svh;
     border-right: none;
     border-bottom: 1px solid var(--line);
+    overflow: auto;
+    -webkit-overflow-scrolling: touch;
+  }
+
+  .backdrop,
+  .scanlines {
+    opacity: 0.16;
+  }
+
+  .scanlines {
+    display: none;
   }
 }
 
 @media (max-width: 700px) {
   .panel {
-    padding: 18px 14px;
-    gap: 14px;
-    max-height: 46vh;
+    padding: calc(16px + env(safe-area-inset-top)) 14px 14px;
+    gap: 12px;
+    max-height: 46svh;
   }
 
   .tool-grid {
@@ -438,5 +455,67 @@ canvas {
 
   .brand h1 {
     font-size: 2.2rem;
+  }
+
+  .tool-card {
+    min-height: 92px;
+  }
+
+  .telemetry-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .footer {
+    flex-direction: column;
+  }
+}
+
+@media (max-width: 560px) {
+  .readouts {
+    grid-template-columns: 1fr;
+  }
+
+  .readouts strong {
+    font-size: 1.5rem;
+  }
+
+  .telemetry-grid strong {
+    font-size: 1.05rem;
+  }
+
+  .log li {
+    font-size: 0.82rem;
+  }
+}
+
+@media (pointer: coarse) {
+  .shell {
+    grid-template-columns: 1fr;
+    grid-template-rows: minmax(0, auto) minmax(0, 1fr);
+  }
+
+  .panel {
+    max-height: 42svh;
+    border-right: none;
+    border-bottom: 1px solid var(--line);
+    overflow: auto;
+    -webkit-overflow-scrolling: touch;
+  }
+
+  .backdrop {
+    opacity: 0.16;
+  }
+
+  .scanlines {
+    display: none;
+  }
+
+  canvas {
+    cursor: default;
+  }
+
+  .tool-card:hover,
+  .ghost:hover {
+    transform: none;
   }
 }

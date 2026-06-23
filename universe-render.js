@@ -48,6 +48,7 @@ function worldToScreen(state, x, y, z) {
 }
 
 function renderHUDGlow(state, ctx) {
+  if (state.isCompact) return;
   const center = worldToScreen(state, 0, 0, 0);
   const radius = Math.min(state.width, state.height) * 0.42;
   const glow = ctx.createRadialGradient(center.x, center.y, 0, center.x, center.y, radius);
@@ -61,12 +62,13 @@ function renderHUDGlow(state, ctx) {
 }
 
 function renderNebulae(state, ctx) {
+  const compact = Boolean(state.isCompact);
   for (const nebula of state.nebulae) {
     const p = worldToScreen(state, nebula.x, nebula.y, nebula.z);
-    const radius = nebula.radius * p.scale;
+    const radius = nebula.radius * p.scale * (compact ? 0.86 : 1);
     const gradient = ctx.createRadialGradient(p.x, p.y, 0, p.x, p.y, radius);
-    gradient.addColorStop(0, `rgba(${nebula.color}, 0.15)`);
-    gradient.addColorStop(0.35, `rgba(${nebula.color}, 0.08)`);
+    gradient.addColorStop(0, `rgba(${nebula.color}, ${compact ? 0.11 : 0.15})`);
+    gradient.addColorStop(0.35, `rgba(${nebula.color}, ${compact ? 0.06 : 0.08})`);
     gradient.addColorStop(1, "rgba(0, 0, 0, 0)");
     ctx.fillStyle = gradient;
     ctx.beginPath();
@@ -76,10 +78,11 @@ function renderNebulae(state, ctx) {
 }
 
 function renderGalaxies(state, ctx) {
+  const compact = Boolean(state.isCompact);
   ctx.globalCompositeOperation = "lighter";
   for (const galaxy of state.galaxies) {
     const p = worldToScreen(state, galaxy.x, galaxy.y, galaxy.z);
-    const scale = Math.min(1.5, Math.max(0.38, p.scale));
+    const scale = Math.min(compact ? 1.2 : 1.5, Math.max(compact ? 0.3 : 0.38, p.scale));
     const radius = galaxy.radius * 0.34 * scale;
     const halo = ctx.createRadialGradient(p.x, p.y, 0, p.x, p.y, radius);
     halo.addColorStop(0, `rgba(${galaxy.color}, ${0.08 + scale * 0.1})`);
@@ -104,6 +107,7 @@ function renderGalaxies(state, ctx) {
 
 function renderStars(state, ctx) {
   const drawList = collectVisibleStars(state);
+  const compact = Boolean(state.isCompact);
 
   ctx.globalCompositeOperation = "lighter";
   for (const item of drawList) {
@@ -111,9 +115,9 @@ function renderStars(state, ctx) {
     if (star.respawn > 0) continue;
 
     const pulse = 1 + star.pulse * 1.2;
-    const size = Math.max(0.6, star.size * scale * pulse);
+    const size = Math.max(compact ? 0.45 : 0.6, star.size * scale * pulse);
     const alpha = clamp(star.alpha * (0.3 + scale * 0.9), 0.05, 1);
-    const glow = ctx.createRadialGradient(x, y, 0, x, y, size * 7);
+    const glow = ctx.createRadialGradient(x, y, 0, x, y, size * (compact ? 4.8 : 7));
     glow.addColorStop(0, `rgba(${star.color}, ${alpha})`);
     glow.addColorStop(0.2, `rgba(${star.color}, ${alpha * 0.45})`);
     glow.addColorStop(1, "rgba(0,0,0,0)");
@@ -131,7 +135,8 @@ function renderStars(state, ctx) {
 }
 
 function collectVisibleStars(state) {
-  const margin = 120 + Math.max(0, (state.camera.zoom - 1) * 220);
+  const compact = Boolean(state.isCompact);
+  const margin = (compact ? 88 : 120) + Math.max(0, (state.camera.zoom - 1) * (compact ? 140 : 220));
   return state.stars
     .map((star) => ({ star, ...worldToScreen(state, star.x, star.y, star.z) }))
     .filter((p) => p.x > -margin && p.x < state.width + margin && p.y > -margin && p.y < state.height + margin)
@@ -139,6 +144,7 @@ function collectVisibleStars(state) {
 }
 
 function renderEffects(state, ctx) {
+  const compact = Boolean(state.isCompact);
   ctx.globalCompositeOperation = "lighter";
   for (const effect of state.effects) {
     const p = worldToScreen(state, effect.x, effect.y, effect.z);
@@ -160,7 +166,7 @@ function renderEffects(state, ctx) {
       grad.addColorStop(0.78, rgba(effect.color, 0.1 + alpha * 0.5));
       grad.addColorStop(1, rgba(effect.color, 0));
       ctx.strokeStyle = grad;
-      ctx.lineWidth = 2 + alpha * 3;
+      ctx.lineWidth = (compact ? 1.6 : 2) + alpha * (compact ? 2.2 : 3);
       ctx.beginPath();
       ctx.moveTo(start.x, start.y);
       ctx.lineTo(midX, midY);
@@ -186,7 +192,7 @@ function renderEffects(state, ctx) {
       grad.addColorStop(0.35, "rgba(255,240,210,0.65)");
       grad.addColorStop(1, "rgba(255,240,210,0)");
       ctx.strokeStyle = grad;
-      ctx.lineWidth = 1.8;
+      ctx.lineWidth = compact ? 1.4 : 1.8;
       ctx.beginPath();
       ctx.moveTo(head.x, head.y);
       ctx.lineTo(head.x - effect.vx * 0.08 * tail, head.y - effect.vy * 0.08 * tail);
@@ -218,7 +224,7 @@ function renderEffects(state, ctx) {
         const ringAlpha = Math.max(0, alpha * (0.84 - i * 0.055));
         if (ringAlpha <= 0.01 || ringRadius <= 4) continue;
         ctx.strokeStyle = `rgba(134,229,255, ${ringAlpha})`;
-        ctx.lineWidth = Math.max(1, 2.2 - i * 0.06);
+        ctx.lineWidth = Math.max(0.9, (compact ? 1.7 : 2.2) - i * 0.06);
         ctx.beginPath();
         ctx.arc(p.x, p.y, ringRadius, 0, Math.PI * 2);
         ctx.stroke();
@@ -227,7 +233,7 @@ function renderEffects(state, ctx) {
     }
 
     if (effect.kind === "singularity") {
-      const corePulse = Math.max(8, radius * 0.14 + Math.sin(effect.age * (effect.pulseRate || 4.2)) * 4);
+      const corePulse = Math.max(compact ? 7 : 8, radius * 0.14 + Math.sin(effect.age * (effect.pulseRate || 4.2)) * 4);
       const haloPulse = radius * (0.9 + Math.sin(effect.age * 2.8) * 0.03);
       ctx.fillStyle = `rgba(4, 6, 10, ${0.9 + alpha * 0.05})`;
       ctx.beginPath();
@@ -242,7 +248,7 @@ function renderEffects(state, ctx) {
       ctx.arc(p.x, p.y, haloPulse, 0, Math.PI * 2);
       ctx.fill();
       ctx.strokeStyle = rgba(effect.color, 0.52 + alpha * 0.3);
-      ctx.lineWidth = 1.6;
+      ctx.lineWidth = compact ? 1.3 : 1.6;
       ctx.beginPath();
       ctx.arc(p.x, p.y, Math.max(14, radius * 0.28), 0, Math.PI * 2);
       ctx.stroke();
@@ -250,8 +256,8 @@ function renderEffects(state, ctx) {
     }
 
     if (effect.kind === "nova") {
-      const coreRadius = Math.max(4, radius * 0.02);
-      const ballRadius = Math.max(18, radius * 0.08);
+      const coreRadius = Math.max(compact ? 3.5 : 4, radius * 0.02);
+      const ballRadius = Math.max(compact ? 15 : 18, radius * 0.08);
       const outerRadius = Math.max(ballRadius * 1.6, radius * 1.02);
       const ball = ctx.createRadialGradient(p.x, p.y, 0, p.x, p.y, outerRadius);
       ball.addColorStop(0, "rgba(255,255,255,0.98)");

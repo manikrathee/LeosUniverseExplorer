@@ -34,6 +34,8 @@ const state = createState();
 function resize() {
   state.width = window.innerWidth;
   state.height = window.innerHeight;
+  state.isCompact = window.matchMedia("(max-width: 1100px), (pointer: coarse)").matches;
+  state.dpr = Math.max(1, Math.min(state.isCompact ? 1.35 : 2, window.devicePixelRatio || 1));
   canvas.width = Math.round(state.width * state.dpr);
   canvas.height = Math.round(state.height * state.dpr);
   canvas.style.width = `${state.width}px`;
@@ -171,6 +173,7 @@ function setupInput() {
   window.addEventListener("resize", resize);
   window.__universeDebug = {
     state,
+    isCompact: () => Boolean(state.isCompact),
     getEffects: () => state.effects.map((effect) => ({
       kind: effect.kind,
       radius: Number(effect.radius.toFixed(2)),
