@@ -5,7 +5,8 @@ import {
   traceRift,
   applySimulationStep,
   addLog,
-  TOOL_META
+  TOOL_META,
+  WORLD_LIMIT
 } from "./universe-sim.js";
 import { renderScene, screenToWorld, sampleTelemetry } from "./universe-render.js";
 import { clamp, lerp } from "./utils.js";
@@ -69,6 +70,11 @@ function selectTool(tool) {
   renderHud();
 }
 
+function clampCameraTarget() {
+  state.cameraTarget.x = clamp(state.cameraTarget.x, -WORLD_LIMIT, WORLD_LIMIT);
+  state.cameraTarget.y = clamp(state.cameraTarget.y, -WORLD_LIMIT, WORLD_LIMIT);
+}
+
 function handlePointerMove(event) {
   const rect = canvas.getBoundingClientRect();
   const x = event.clientX - rect.left;
@@ -83,6 +89,16 @@ function handlePointerMove(event) {
   state.pointer.prevWorldY = state.pointer.worldY;
   state.pointer.worldX = world.x;
   state.pointer.worldY = world.y;
+
+  if (state.pointer.panning) {
+    const dx = x - state.pointer.panStartX;
+    const dy = y - state.pointer.panStartY;
+    const zoom = state.camera.zoomTarget ?? state.camera.zoom;
+    state.cameraTarget.x = state.pointer.cameraStartX - dx / zoom;
+    state.cameraTarget.y = state.pointer.cameraStartY - dy / zoom;
+    clampCameraTarget();
+    return;
+  }
 
   if (state.pointer.down && state.tool === "rift") {
     const dx = state.pointer.worldX - state.pointer.prevWorldX;
@@ -102,12 +118,25 @@ function handlePointerMove(event) {
   const parallaxY = (y - state.height / 2) * 0.035;
   state.cameraTarget.x = lerp(state.cameraTarget.x, parallaxX, 0.05);
   state.cameraTarget.y = lerp(state.cameraTarget.y, parallaxY, 0.05);
+  clampCameraTarget();
 }
 
 function handlePointerDown(event) {
   canvas.setPointerCapture?.(event.pointerId);
-  state.pointer.down = true;
+  const isPanGesture = event.button === 1 || event.shiftKey || event.button === 2;
+  state.pointer.down = !isPanGesture;
+  state.pointer.panning = isPanGesture;
+  state.pointer.panStartX = state.pointer.x;
+  state.pointer.panStartY = state.pointer.y;
+  state.pointer.cameraStartX = state.cameraTarget.x;
+  state.pointer.cameraStartY = state.cameraTarget.y;
   state.dragSamples = [{ x: state.pointer.worldX, y: state.pointer.worldY }];
+
+  if (isPanGesture) {
+    event.preventDefault();
+    return;
+  }
+
   if (state.tool !== "rift") {
     fireToolAt(state, state.pointer.worldX, state.pointer.worldY, state.tool);
   } else {
@@ -118,6 +147,7 @@ function handlePointerDown(event) {
 
 function handlePointerUp() {
   state.pointer.down = false;
+  state.pointer.panning = false;
   state.dragSamples = [];
 }
 
@@ -127,7 +157,7 @@ function handleWheel(event) {
   const intensity = clamp(Math.abs(event.deltaY) / 120, 0.35, 2.2);
   const step = 0.028 * intensity;
   const nextTarget = state.camera.zoomTarget ?? state.camera.zoom;
-  state.camera.zoomTarget = clamp(nextTarget * (1 - direction * step), 0.72, 1.7);
+  state.camera.zoomTarget = clamp(nextTarget * (1 - direction * step), 0.42, 2.85);
 }
 
 function setupInput() {
@@ -135,6 +165,7 @@ function setupInput() {
   canvas.addEventListener("pointerdown", handlePointerDown);
   window.addEventListener("pointerup", handlePointerUp);
   canvas.addEventListener("wheel", handleWheel, { passive: false });
+  canvas.addEventListener("contextmenu", (event) => event.preventDefault());
 
   toolButtons.forEach((button) => {
     button.addEventListener("click", () => selectTool(button.dataset.tool));
@@ -163,6 +194,22 @@ function setupInput() {
       createUniverse(state);
       addLog(state, "Universe reset. Cluster lattice restored.");
       renderHud();
+    }
+    if (event.key === "ArrowLeft" || event.key.toLowerCase() === "a") {
+      state.cameraTarget.x -= 120;
+      clampCameraTarget();
+    }
+    if (event.key === "ArrowRight" || event.key.toLowerCase() === "d") {
+      state.cameraTarget.x += 120;
+      clampCameraTarget();
+    }
+    if (event.key === "ArrowUp" || event.key.toLowerCase() === "w") {
+      state.cameraTarget.y -= 120;
+      clampCameraTarget();
+    }
+    if (event.key === "ArrowDown" || event.key.toLowerCase() === "s") {
+      state.cameraTarget.y += 120;
+      clampCameraTarget();
     }
     if (event.key === " ") {
       event.preventDefault();

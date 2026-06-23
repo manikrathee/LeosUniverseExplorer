@@ -136,7 +136,10 @@ function renderStars(state, ctx) {
 
 function collectVisibleStars(state) {
   const compact = Boolean(state.isCompact);
-  const margin = (compact ? 88 : 120) + Math.max(0, (state.camera.zoom - 1) * (compact ? 140 : 220));
+  const zoom = Math.max(0.35, state.camera.zoom || 1);
+  const zoomInBonus = Math.max(0, (zoom - 1) * (compact ? 140 : 220));
+  const zoomOutBonus = Math.max(0, (1 / zoom - 1) * (compact ? 120 : 180));
+  const margin = (compact ? 88 : 120) + zoomInBonus + zoomOutBonus;
   return state.stars
     .map((star) => ({ star, ...worldToScreen(state, star.x, star.y, star.z) }))
     .filter((p) => p.x > -margin && p.x < state.width + margin && p.y > -margin && p.y < state.height + margin)

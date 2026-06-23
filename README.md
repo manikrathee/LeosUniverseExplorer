@@ -44,5 +44,7 @@ After pushing to GitHub, set Pages to use GitHub Actions in repo settings.
 - `R` reset
 - `Space` pause
 - mouse wheel zoom
+- shift-drag or middle mouse pan
+- arrow keys / WASD nudge the view
 - click to fire
 - drag with Rift

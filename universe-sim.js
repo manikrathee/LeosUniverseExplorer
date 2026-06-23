@@ -7,7 +7,7 @@ export const TOOL_META = {
   rift: { label: "Rift", cost: 18, color: "#b8a6ff" }
 };
 
-export const WORLD_LIMIT = 1550;
+export const WORLD_LIMIT = 3200;
 
 const AUTO_EVENT_SEQUENCE = ["shooting", "cluster", "birth", "shooting", "death", "cluster"];
 const BIRTH_LOGS = [
@@ -50,7 +50,20 @@ export function createState() {
     fracture: 0,
     camera: { x: 0, y: 0, z: -240, zoom: 1, zoomTarget: 1 },
     cameraTarget: { x: 0, y: 0 },
-    pointer: { x: 0, y: 0, down: false, worldX: 0, worldY: 0, prevWorldX: 0, prevWorldY: 0 },
+    pointer: {
+      x: 0,
+      y: 0,
+      down: false,
+      panning: false,
+      worldX: 0,
+      worldY: 0,
+      prevWorldX: 0,
+      prevWorldY: 0,
+      panStartX: 0,
+      panStartY: 0,
+      cameraStartX: 0,
+      cameraStartY: 0
+    },
     dragSamples: [],
     stars: [],
     clusters: [],
@@ -94,10 +107,15 @@ export function createUniverse(state) {
   state.cameraTarget.x = 0;
   state.cameraTarget.y = 0;
   state.pointer.down = false;
+  state.pointer.panning = false;
   state.pointer.worldX = 0;
   state.pointer.worldY = 0;
   state.pointer.prevWorldX = 0;
   state.pointer.prevWorldY = 0;
+  state.pointer.panStartX = 0;
+  state.pointer.panStartY = 0;
+  state.pointer.cameraStartX = 0;
+  state.pointer.cameraStartY = 0;
   state.dragSamples = [];
 
   for (let i = 0; i < 13; i += 1) {
@@ -115,9 +133,9 @@ export function createUniverse(state) {
   }
 
   const galaxySeeds = [
-    { x: -980, y: -260, z: -160, radius: 760, armTwist: 1.2, color: "134,229,255" },
-    { x: 920, y: -180, z: 220, radius: 680, armTwist: 1.45, color: "255,211,142" },
-    { x: -520, y: 720, z: 60, radius: 520, armTwist: 1.18, color: "255,110,120" }
+    { x: -WORLD_LIMIT * 0.58, y: -WORLD_LIMIT * 0.16, z: -160, radius: 1100, armTwist: 1.2, color: "134,229,255" },
+    { x: WORLD_LIMIT * 0.56, y: -WORLD_LIMIT * 0.13, z: 220, radius: 980, armTwist: 1.45, color: "255,211,142" },
+    { x: -WORLD_LIMIT * 0.32, y: WORLD_LIMIT * 0.44, z: 60, radius: 780, armTwist: 1.18, color: "255,110,120" }
   ];
 
   for (const galaxy of galaxySeeds) {
@@ -127,13 +145,13 @@ export function createUniverse(state) {
   seedGalaxyStars(state, rng, galaxySeeds[0], 520, 0.8);
   seedGalaxyStars(state, rng, galaxySeeds[1], 430, 0.9);
   seedGalaxyStars(state, rng, galaxySeeds[2], 300, 1.1);
-  seedFieldStars(state, rng, 1100);
+  seedFieldStars(state, rng, 1600);
 
-  while (state.stars.length < 3800) {
+  while (state.stars.length < 5200) {
     const clusterIndex = Math.floor(rng() * state.clusters.length);
     const cluster = state.clusters[clusterIndex];
     const arm = rng() * Math.PI * 2;
-    const spread = 30 + Math.pow(rng(), 0.35) * 650;
+    const spread = 30 + Math.pow(rng(), 0.35) * 950;
     const filament = rng() < 0.28 ? 1.45 : 1;
     const x = cluster.x + Math.cos(arm) * spread * filament + randn(rng) * 28;
     const y = cluster.y + Math.sin(arm) * spread * filament + randn(rng) * 28;
@@ -149,10 +167,10 @@ export function createUniverse(state) {
   }
 
   state.nebulae = [
-    { x: -640, y: -220, z: -120, radius: 420, color: "134,229,255" },
-    { x: 420, y: -360, z: 80, radius: 350, color: "255,211,142" },
-    { x: 280, y: 470, z: -220, radius: 390, color: "255,110,120" },
-    { x: -180, y: 360, z: 140, radius: 300, color: "169,141,255" }
+    { x: -WORLD_LIMIT * 0.2, y: -WORLD_LIMIT * 0.07, z: -120, radius: 620, color: "134,229,255" },
+    { x: WORLD_LIMIT * 0.14, y: -WORLD_LIMIT * 0.11, z: 80, radius: 500, color: "255,211,142" },
+    { x: WORLD_LIMIT * 0.09, y: WORLD_LIMIT * 0.15, z: -220, radius: 580, color: "255,110,120" },
+    { x: -WORLD_LIMIT * 0.06, y: WORLD_LIMIT * 0.11, z: 140, radius: 420, color: "169,141,255" }
   ];
 
   state.log = [
@@ -213,7 +231,7 @@ function seedFieldStars(state, rng, count) {
   for (let i = 0; i < count; i += 1) {
     const theta = rng() * Math.PI * 2;
     const phi = Math.acos(lerp(-1, 1, rng()));
-    const radius = 160 + Math.pow(rng(), 0.28) * 1480;
+    const radius = 220 + Math.pow(rng(), 0.28) * 2400;
     const wobble = 0.72 + rng() * 0.32;
     const x = Math.cos(theta) * Math.sin(phi) * radius + randn(rng) * 40;
     const y = Math.sin(theta) * Math.sin(phi) * radius * wobble + randn(rng) * 40;
@@ -532,7 +550,7 @@ function spawnStarDeath(state) {
 
 function spawnShootingStar(state) {
   const rng = Math.random;
-  const edge = 1500 + rng() * 300;
+  const edge = WORLD_LIMIT * 0.55 + rng() * WORLD_LIMIT * 0.25;
   const angle = rng() * Math.PI * 2;
   const x = state.camera.x + Math.cos(angle) * edge;
   const y = state.camera.y + Math.sin(angle) * edge;
@@ -576,13 +594,13 @@ function wrapStarAroundView(state, star) {
   const dy = star.y - state.camera.y;
   const dz = star.z - state.camera.z;
   const distance = Math.hypot(dx, dy, dz);
-  const shellMin = 820;
-  const shellMax = 1820;
+  const shellMin = WORLD_LIMIT * 0.35;
+  const shellMax = WORLD_LIMIT * 0.95;
   if (distance >= shellMax) {
     const nx = dx / distance;
     const ny = dy / distance;
     const nz = dz / distance;
-    const wrapDistance = shellMin + Math.random() * 580;
+    const wrapDistance = shellMin + Math.random() * (WORLD_LIMIT * 0.32);
     star.x = state.camera.x - nx * wrapDistance + randn(Math.random) * 18;
     star.y = state.camera.y - ny * wrapDistance + randn(Math.random) * 18;
     star.z = state.camera.z - nz * wrapDistance + randn(Math.random) * 28;
@@ -596,7 +614,7 @@ function wrapStarAroundView(state, star) {
     const nx = dx / (distance || 1);
     const ny = dy / (distance || 1);
     const nz = dz / (distance || 1);
-    const wrapDistance = shellMax - Math.random() * 420;
+    const wrapDistance = shellMax - Math.random() * (WORLD_LIMIT * 0.2);
     star.x = state.camera.x + nx * wrapDistance + randn(Math.random) * 16;
     star.y = state.camera.y + ny * wrapDistance + randn(Math.random) * 16;
     star.z = state.camera.z + nz * wrapDistance + randn(Math.random) * 24;
@@ -613,7 +631,7 @@ function respawnStar(state, star) {
   const rng = Math.random;
   const theta = rng() * Math.PI * 2;
   const phi = Math.acos(lerp(-1, 1, rng()));
-  const radius = 820 + rng() * 900;
+  const radius = WORLD_LIMIT * 0.32 + rng() * WORLD_LIMIT * 0.28;
   const sx = Math.cos(theta) * Math.sin(phi);
   const sy = Math.sin(theta) * Math.sin(phi);
   const sz = Math.cos(phi);
