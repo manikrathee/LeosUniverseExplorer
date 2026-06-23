@@ -28,6 +28,7 @@ const logList = document.getElementById("logList");
 const resetBtn = document.getElementById("resetBtn");
 const pauseBtn = document.getElementById("pauseBtn");
 const reticle = document.getElementById("reticle");
+const hudPanel = document.querySelector(".hud");
 
 const state = createState();
 
@@ -36,6 +37,8 @@ function resize() {
   state.height = window.innerHeight;
   state.isCompact = window.matchMedia("(max-width: 1100px), (pointer: coarse)").matches;
   state.dpr = Math.max(1, Math.min(state.isCompact ? 1.35 : 2, window.devicePixelRatio || 1));
+  hudPanel.scrollTop = 0;
+  hudPanel.scrollLeft = 0;
   canvas.width = Math.round(state.width * state.dpr);
   canvas.height = Math.round(state.height * state.dpr);
   canvas.style.width = `${state.width}px`;
