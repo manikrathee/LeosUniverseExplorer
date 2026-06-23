@@ -1,0 +1,4 @@
+dist/
+.playwright-mcp/
+.DS_Store
+npm-debug.log*

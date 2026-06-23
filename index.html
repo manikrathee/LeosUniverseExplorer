@@ -1,0 +1,131 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Leos Universe Explorer</title>
+    <meta
+      name="description"
+      content="A NASA-inspired observatory cockpit for exploring and detonating a living star field."
+    />
+    <link rel="icon" href='data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 32 32"><defs><radialGradient id="g" cx="50%25" cy="50%25" r="50%25"><stop offset="0%25" stop-color="%2386e5ff"/><stop offset="100%25" stop-color="%2303060a"/></radialGradient></defs><circle cx="16" cy="16" r="16" fill="url(%23g)"/><circle cx="16" cy="16" r="5" fill="%23eef4ff"/><path d="M4 16h24M16 4v24" stroke="%2386e5ff" stroke-width="1.2" stroke-linecap="round" opacity=".9"/></svg>' />
+    <link rel="stylesheet" href="./styles.css" />
+  </head>
+  <body>
+    <div class="backdrop"></div>
+    <div class="scanlines"></div>
+    <main class="shell">
+      <aside class="hud panel">
+        <div class="brand">
+          <p class="eyebrow">MISSION CONTROL</p>
+          <h1>Leos Universe Explorer</h1>
+          <p class="lede">
+            Full-frame star field, live events, destructive instruments.
+          </p>
+        </div>
+
+        <section class="readouts">
+          <article>
+            <span>Field Density</span>
+            <strong id="fieldReadout">Full field</strong>
+          </article>
+          <article>
+            <span>Active Stars</span>
+            <strong id="starReadout">1,284</strong>
+          </article>
+          <article>
+            <span>Instability</span>
+            <strong id="entropyReadout">0%</strong>
+          </article>
+          <article>
+            <span>Power Core</span>
+            <strong id="energyReadout">100%</strong>
+          </article>
+        </section>
+
+        <section class="toolkit">
+          <div class="section-heading">
+            <span>TOOLS</span>
+            <small>1-4 / click / drag</small>
+          </div>
+          <div class="tool-grid" id="toolGrid">
+            <button class="tool-card active" data-tool="pulse">
+              <span class="tool-key">1</span>
+              <span class="tool-name">Pulse</span>
+              <span class="tool-desc">Cast a bloom.</span>
+            </button>
+            <button class="tool-card" data-tool="nova">
+              <span class="tool-key">2</span>
+              <span class="tool-name">Nova</span>
+              <span class="tool-desc">Drive a flare.</span>
+            </button>
+            <button class="tool-card" data-tool="singularity">
+              <span class="tool-key">3</span>
+              <span class="tool-name">Singularity</span>
+              <span class="tool-desc">Hold and draw.</span>
+            </button>
+            <button class="tool-card" data-tool="rift">
+              <span class="tool-key">4</span>
+              <span class="tool-name">Rift</span>
+              <span class="tool-desc">Trace a fault.</span>
+            </button>
+          </div>
+        </section>
+
+        <section class="telemetry panel-inset">
+          <div class="section-heading">
+            <span>TELEMETRY</span>
+            <small id="telemetryReadout">Live cadence</small>
+          </div>
+          <div class="telemetry-grid">
+            <article>
+              <span>Zoom</span>
+              <strong id="zoomReadout">1.00x</strong>
+            </article>
+            <article>
+              <span>Field Load</span>
+              <strong id="fieldLoadReadout">0%</strong>
+            </article>
+            <article>
+              <span>Next Event</span>
+              <strong id="nextEventReadout">0.0s</strong>
+            </article>
+            <article>
+              <span>Recent Event</span>
+              <strong id="recentEventReadout">None</strong>
+            </article>
+          </div>
+          <div class="bars">
+            <div class="bar">
+              <span>Fracture Index</span>
+              <div><i id="fractureBar"></i></div>
+            </div>
+            <div class="bar">
+              <span>Field Activity</span>
+              <div><i id="driftBar"></i></div>
+            </div>
+          </div>
+        </section>
+
+        <section class="log panel-inset">
+          <div class="section-heading">
+            <span>LOG</span>
+            <small>latest events</small>
+          </div>
+          <ul id="logList" aria-live="polite"></ul>
+        </section>
+
+        <footer class="footer">
+          <button id="resetBtn" class="ghost">Reset universe</button>
+          <button id="pauseBtn" class="ghost">Pause</button>
+        </footer>
+      </aside>
+
+      <section class="viewport">
+        <canvas id="universe" aria-label="Interactive universe simulation"></canvas>
+        <div class="reticle" id="reticle"></div>
+      </section>
+    </main>
+    <script type="module" src="./app.js"></script>
+  </body>
+</html>

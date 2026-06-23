@@ -1,0 +1,13 @@
+{
+  "name": "leos-universe-explorer",
+  "version": "1.0.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "dev": "node server.cjs",
+    "start": "node server.cjs",
+    "build": "node scripts/build.mjs",
+    "verify": "npm run build && node scripts/verify.mjs",
+    "deploy": "npm run verify"
+  }
+}
